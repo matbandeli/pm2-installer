@@ -43,8 +43,22 @@ Write-Host "Populating cache folder with all dependencies.."
 $BeforePopulation = Get-Date
 
 npm install --no-save --global-style --force --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $pm2_package
-npm install --no-save --global-style --force --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $pm2_logrotate_package
 npm install --no-save --global-style --force --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $node_windows_package
+
+#pm2 modules
+Write-Host "Installing pm2-logrotate module for offline install"
+  
+  # Remember where we are
+  $wd = (Get-Item -Path '.\' -Verbose).FullName
+  
+  $pm2_local_directory = ".\node_modules\pm2"
+
+  Set-Location $pm2_local_directory
+
+  pm2 install pm2-logrotate
+
+  # Go back to where we were
+  Set-Location $wd
 
 Write-Host "Populating cache took $([Math]::Floor($(Get-Date).Subtract($BeforePopulation).TotalSeconds)) seconds."
 
