@@ -6,10 +6,13 @@ $pm2_package = "$(node src/tools/echo-dependency.js pm2)"
 $pm2_logrotate_package = "$(node src/tools/echo-dependency.js pm2-logrotate)"
 $node_windows_package = "$(node src/tools/echo-dependency.js node-windows windows)"
 
+$pm2_home_folder = ".\pm2_home";
 $cache_folder = ".\.npm_cache";
 $cache_archive_tar=".\bundle.tar.gz"
 $cache_archive_zip = ".\bundle.zip";
 $node_modules = ".\node_modules";
+
+taskkill /F /IM node.exe
 
 # Remove any existing cache tar archive
 if (Test-Path $cache_archive_tar) {
@@ -35,6 +38,12 @@ if (Test-Path $node_modules) {
   Remove-Item $node_modules -recurse | Out-Null
 }
 
+# Remove existing pm2:home folder, if one exists
+if (Test-Path $pm2_home_folder) {
+  Write-Host "Existing pm2_home folder detected, removing.."
+  Remove-Item $pm2_home_folder -recurse | Out-Null
+}
+
 # Create a new npm cache folder
 New-Item -ItemType Directory -Name $cache_folder | Out-Null
 
@@ -43,8 +52,28 @@ Write-Host "Populating cache folder with all dependencies.."
 $BeforePopulation = Get-Date
 
 npm install --no-save --global-style --force --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $pm2_package
-npm install --no-save --global-style --force --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $pm2_logrotate_package
 npm install --no-save --global-style --force --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $node_windows_package
+
+#pm2 modules
+Write-Host "Installing pm2-logrotate module for offline install"
+
+  New-Item -ItemType Directory -Name $pm2_home_folder | Out-Null
+  $env:PM2_HOME = "..\..\$($pm2_home_folder)"
+  
+  # Remember where we are
+  $wd = (Get-Item -Path '.\' -Verbose).FullName
+  
+  $logrotate_directory = ".\node_modules\pm2"
+
+  Set-Location $logrotate_directory
+
+  pm2 install pm2-logrotate
+
+  # Go back to where we were
+  Set-Location $wd
+  
+  # there is probably a cleaner solution to stop pm2 deamon
+  taskkill /F /IM node.exe
 
 Write-Host "Populating cache took $([Math]::Floor($(Get-Date).Subtract($BeforePopulation).TotalSeconds)) seconds."
 
