@@ -13,19 +13,8 @@ if ($? -eq $True) {
 
 } else {
 
-  $logrotate_directory = "$(npm config get prefix)\node_modules\pm2-logrotate\"
+  Write-Host "pm2-logrotate is already in the offline installed pm2"
 
-  Write-Host "Installing pm2-logrotate locally in directory: $logrotate_directory"
-
-  # Remember where we are
-  $wd = (Get-Item -Path '.\' -Verbose).FullName
-
-  Set-Location $logrotate_directory
-
-  pm2 install . --silent
-
-  # Go back to where we were
-  Set-Location $wd
 }
 
 pm2 save --force
