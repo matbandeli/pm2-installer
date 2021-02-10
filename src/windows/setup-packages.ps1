@@ -100,9 +100,22 @@ if ($? -eq $True) {
   Write-Host "Installing packages.."
 
   $PriorToInstall = Get-Date
+  
+  # First, copy the pm2_home files (for preinstalled modules like pm2-logrotate)
+  $source = ".\pm2_home"
+  $PM2_HOME = "$($env:ProgramData)\pm2\home"
+  
+  if (-Not (Test-Path $PM2_HOME))
+  {
+     md -path $PM2_HOME
+  }
+  Write-Host "Copying pm2 home files from `"$source`" to `"$PM2_HOME`".."
+  
+  Copy-Item -Path $source\* -Destination $PM2_HOME -Recurse -Force
+  
+  Write-Host "Copying files complete."
 
   npm install --global --offline --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $pm2_package
-  npm install --global --offline --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $pm2_logrotate_package
   npm install --global --offline --cache $cache_folder --shrinkwrap false --loglevel=error --no-audit --no-fund $node_windows_package
 
   Write-Host "Installing packages took $([Math]::Floor($(Get-Date).Subtract($PriorToInstall).TotalSeconds)) seconds."
@@ -112,9 +125,16 @@ if ($? -eq $True) {
   Write-Host "Cannot connect to the npm registry, and no offline bundle was found. Attempting install anyway.."
 
   # This will probably not work.
+  
+  # First, copy the pm2_home files (for preinstalled modules like pm2-logrotate)
+  $source = ".\pm2_home"
+  $PM2_HOME = "$($env:ProgramData)\pm2\home"
+  Write-Host "Copying pm2 home files from `"$source`" to `"$PM2_HOME`".."
+  Copy-Item -Path $source\* -Destination $PM2_HOME -Recurse -Force
+  Write-Host "Copying files complete."
 
   npm install --global --loglevel=error --no-audit --no-fund $pm2_package
-  npm install --global --loglevel=error --no-audit --no-fund $pm2_logrotate_package
+  # npm install --global --loglevel=error --no-audit --no-fund $pm2_logrotate_package
   npm install --global --loglevel=error --no-audit --no-fund $node_windows_package
 }
 
